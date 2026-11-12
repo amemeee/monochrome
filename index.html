@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Black-and-white clothing, picked without small talk.">
+  <title>Monochrome</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" id="brand" href="#hero">Monochrome</a>
+    <a class="nav-order" href="#order">Shop</a>
+  </nav>
+
+  <!-- ── Section 1: Mio runs the shop ── -->
+  <section class="hero" id="hero" aria-label="Mio, the shy shopkeeper">
+    <div class="mio-figure" id="mioFigure">
+      <button class="mio" id="mio" type="button" aria-label="Poke Mio">
+        <img class="mio-img" id="mioImg" alt="" decoding="async">
+        <img class="mio-blink" id="mioBlink" alt="" decoding="async">
+      </button>
+
+      <div class="bubble" id="bubble">
+        <p class="bubble-text" id="bubbleText" aria-hidden="true"></p>
+        <p class="sr-only" id="bubbleLive" aria-live="polite"></p>
+        <div class="bubble-choices" id="choices" role="group" aria-label="Reply to Mio"></div>
+      </div>
+    </div>
+
+    <button class="talk-btn" id="talkBtn" type="button" hidden>Talk to Mio</button>
+    <a class="scroll-cue" href="#order">scroll to shop <span aria-hidden="true">↓</span></a>
+  </section>
+
+  <!-- ── Section 2: shopping ── -->
+  <section class="order" id="order" aria-labelledby="orderTitle">
+    <header class="order-head">
+      <h2 id="orderTitle">Shop</h2>
+      <p>Pick your clothes. Nobody will ask “can I help you?”</p>
+    </header>
+
+    <div class="order-grid">
+      <form class="builder" id="builder">
+        <fieldset>
+          <legend>1. Item</legend>
+          <div class="chips items" id="itemChips"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>2. Colour</legend>
+          <div class="chips" id="colourChips"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>3. Size</legend>
+          <div class="chips sizes" id="sizeChips"></div>
+          <p class="hint" id="sizeHint">&nbsp;</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>4. Fit</legend>
+          <div class="chips" id="fitChips"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>5. Print</legend>
+          <div class="chips" id="printChips"></div>
+          <p class="hint" id="printHint">Pants don’t get a back print. Nobody looks there anyway.</p>
+        </fieldset>
+
+        <div class="add-row">
+          <div class="add-name">
+            <span class="preview" id="preview" aria-hidden="true"></span>
+            <div class="add-text">
+              <p class="name-line" id="nameLine">Pick an item</p>
+              <p class="plain" id="plainName">&nbsp;</p>
+            </div>
+          </div>
+          <div class="qty" role="group" aria-label="Quantity">
+            <button type="button" id="qtyDown" aria-label="One less">−</button>
+            <output id="qty" aria-live="polite">1</output>
+            <button type="button" id="qtyUp" aria-label="One more">+</button>
+          </div>
+          <button type="submit" class="btn main" id="addBtn" disabled>Add <span id="addPrice"></span></button>
+        </div>
+      </form>
+
+      <aside class="summary-wrap">
+        <!-- Mio peeking over the bag card (shows once assets/peek.jpg exists) -->
+        <div class="peek" id="peek" aria-hidden="true">
+          <div class="peek-clip"><img class="peek-img" id="peekImg" alt="" decoding="async"></div>
+          <p class="peek-bubble" id="peekBubble"></p>
+        </div>
+        <div class="summary" id="summary" aria-live="polite"></div>
+      </aside>
+    </div>
+  </section>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script src="mio.js"></script>
+</body>
+</html>
