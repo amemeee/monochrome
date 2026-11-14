@@ -1,15 +1,9 @@
-// Section 2: the catalogue (product cards + quick view), the bag card, paying, and Mio peeking.
-// hero.js (section 1) uses window.Shop to describe pieces and to open her picks.
+// The shop section on the home page: product cards + quick view, the bag card (bag -> pay -> post), and Mio peeking.
+// Common helpers, saved orders and the receipt modal live in shared.js.
 (() => {
   "use strict";
 
-  const cfg = window.SHOP_CONFIG;
-  const ART = cfg.art;
-  const $ = (sel) => document.querySelector(sel);
-  const money = (n) => `${cfg.currency} ${n.toFixed(2)}`;
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const byId = (list, id) => list.find((x) => x.id === id);
-  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const { cfg, ART, SHIP, $, esc, byId, money, calm, rememberOrder, showReceipt, goTrack, setBagCount, BAG_KEY } = window.Mono;
 
   // Garment outlines, 48×48. Filled with the chosen colour; used until there's drawn art.
   const ICONS = {
@@ -43,7 +37,8 @@
       || products[0];
   }
 
-  let prefSize = "M";   // last size picked (or set by Mio's size help)
+  let prefSize = "M";   // last size picked (or set by Mio's size help on the assistant page)
+  try { const sv = localStorage.getItem("monochrome-size"); if (byId(cfg.sizes, sv)) prefSize = sv; } catch { /* private mode */ }
 
   function describe(piece) {
     const p = findProduct(piece);
@@ -236,7 +231,6 @@
   const grid = $("#products");
 
   function card(p) {
-    const c = cardColour.get(p.id);
     return `
       <article class="card" id="p-${p.id}" data-id="${p.id}">
         <button type="button" class="card-img" data-open aria-label="View ${esc(p.name)}">
@@ -247,15 +241,11 @@
           <h3 class="card-name"><button type="button" data-open>${esc(p.name)}</button></h3>
           <p class="card-price">${money(p.price)}</p>
           <p class="card-note">${esc(noteFor(p))}</p>
-          <div class="dots" role="group" aria-label="Colour">${p.colours.map((id) => {
-            const col = byId(cfg.colours, id);
-            return `<button type="button" class="dot" data-colour="${id}" style="--hex:${col.hex}" title="${esc(col.name)}" aria-label="${esc(col.name)}" aria-pressed="${id === c}"></button>`;
-          }).join("")}</div>
         </div>
       </article>`;
   }
 
-  const PER_PAGE = cfg.perPage || 6;
+  const PER_PAGE = +document.body.dataset.perPage || cfg.perPage || 6;
   let page = 1;
 
   function listed() {
@@ -304,25 +294,9 @@
   grid.addEventListener("click", (e) => {
     const c = e.target.closest(".card");
     if (!c) return;
-    const dot = e.target.closest("[data-colour]");
-    if (dot) return setCardColour(c.dataset.id, dot.dataset.colour);
     if (e.target.closest("[data-open]")) openQuick(c.dataset.id);
   });
-  // Hovering a colour dot previews it (mouse only).
-  grid.addEventListener("pointerover", (e) => {
-    const dot = e.target.closest("[data-colour]");
-    if (!dot || e.pointerType !== "mouse") return;
-    const c = dot.closest(".card");
-    paint(c.querySelector(".art"), byId(products, c.dataset.id), dot.dataset.colour);
-  });
-  grid.addEventListener("pointerout", (e) => {
-    const dot = e.target.closest("[data-colour]");
-    if (!dot) return;
-    const c = dot.closest(".card");
-    paint(c.querySelector(".art"), byId(products, c.dataset.id), cardColour.get(c.dataset.id));
-  });
-
-  // ── Quick view: colour, size, quantity, add ──
+  // ── Quick view: size, quantity, add ──
   const dlg = $("#quick");
   let qv = null;   // { p, colour, size, qty }
 
@@ -351,13 +325,6 @@
           <p class="qv-price">${money(p.price)}</p>
           <p class="qv-note">${esc(noteFor(p))}</p>
           <fieldset>
-            <legend>Colour · <span data-colour-name></span></legend>
-            <div class="chips colours">${p.colours.map((cid) => {
-              const col = byId(cfg.colours, cid);
-              return chip("qvColour", cid, `<i class="swatch" style="background:${esc(col.hex)}"></i><b>${esc(col.name)}</b>`, cid === colour);
-            }).join("")}</div>
-          </fieldset>
-          <fieldset>
             <legend>Size</legend>
             <div class="chips sizes">${cfg.sizes.map((s) =>
               chip("qvSize", s.id, `<b>${esc(s.id)}</b><small>${m} ${s[m]}</small>`, s.id === prefSize)).join("")}</div>
@@ -381,7 +348,6 @@
   function updateQuick() {
     const { p, colour, qty } = qv;
     paint(dlg.querySelector(".art"), p, colour);
-    dlg.querySelector("[data-colour-name]").textContent = byId(cfg.colours, colour).name;
     dlg.querySelector("[data-qty-out]").textContent = qty;
     const add = dlg.querySelector("[data-add]");
     add.textContent = `Add to bag · ${money(p.price * qty)}`;
@@ -390,7 +356,6 @@
   }
 
   dlg.addEventListener("change", (e) => {
-    if (e.target.name === "qvColour") { qv.colour = e.target.value; setCardColour(qv.p.id, qv.colour); }
     if (e.target.name === "qvSize") { qv.size = prefSize = e.target.value; }
     updateQuick();
   });
@@ -435,7 +400,6 @@
   }
 
   // ── Bag card: bag → pay → pickup card ──
-  const SHIP = cfg.shipping || {};
   let bag = [];
   let ship = null;       // posting details, filled in after paying
   let stage = "order";   // order → pay → ship → card
@@ -518,10 +482,7 @@
           <button type="button" class="btn main" data-act="track">Track it</button>
         </div>`;
     }
-    const n = count();
-    $("#bagCount").textContent = n;
-    $("#bagCount").hidden = !n;   // badge only when there's something in the bag
-    $("#navBag").setAttribute("aria-label", n ? `Bag, ${n} ${n === 1 ? "item" : "items"}` : "Bag, empty");
+    setBagCount(count());
     saveBag();
   }
 
@@ -529,7 +490,6 @@
 
   // Keep the bag (and the step) across a refresh, so someone who has paid isn't left with
   // nothing before they've given an address. Only product / colour / size / qty: no personal data.
-  const BAG_KEY = "monochrome-bag";
   function saveBag() {
     try {
       if (!bag.length || stage === "card") return localStorage.removeItem(BAG_KEY);
@@ -568,7 +528,7 @@
       peekSay("th-thank you… where should I send it?");
     }
     if (act === "new") { stage = "order"; bag = []; ship = null; }
-    if (act === "track") return openTrack(orderNo);
+    if (act === "track") return goTrack(orderNo);
     render();
     $("#summary").scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
@@ -617,207 +577,6 @@
     showReceipt(order);
   });
 
-  // ── Receipt modal: Mio says thanks, the receipt underneath ──
-  const rc = $("#receipt");
-  function showReceipt(o) {
-    const ship = o.ship, orderNo = o.code;
-    const when = new Date(o.at);
-    const date = when.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
-    const time = when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    const to = ship && [ship.line1, ship.line2, `${ship.postcode} ${ship.city}`, ship.state].filter(Boolean).join(", ");
-    rc.innerHTML = `
-      <div class="qv">
-        <div class="qv-img rc-img"><img src="${esc(ART.mio)}thanks${ART.ext}" alt="Mio making a heart with her hands" decoding="async"></div>
-        <div class="qv-info rc-info">
-          <button type="button" class="qv-close" data-close aria-label="Close">×</button>
-          <p class="qv-kicker">Thank you · receipt</p>
-          <h3 id="rcTitle">Order ${esc(orderNo)}</h3>
-          <p class="qv-note">${esc(date)} · ${esc(time)}</p>
-          <div class="rc-code">
-            <span><small>Tracking code</small><b>${esc(orderNo)}</b></span>
-            <button type="button" class="btn" data-copy>Copy</button>
-          </div>
-          ${ship?.email ? `<p class="rc-line rc-grey">We’ll also email this code to ${esc(ship.email)}.</p>` : ""}
-          <ul class="rc-items">${o.items.map((it) => `
-            <li><span class="q">${it.qty}×</span><div class="info"><b>${esc(it.name)}</b><small>${esc(it.plain)}</small></div><span>${money(it.price * it.qty)}</span></li>`).join("")}
-          </ul>
-          <div class="total"><span>Total paid</span><span>${money(o.total)}</span></div>
-          <p class="rc-line"><b>Paid by</b> QR</p>
-          ${ship ? `<p class="rc-line"><b>Posting to</b> ${esc(ship.name)}<br>${esc(to)}${ship.phone ? `<br>${esc(ship.phone)}` : ""}${ship.note ? `<br><i>“${esc(ship.note)}”</i>` : ""}</p>` : ""}
-          ${SHIP.note ? `<p class="rc-line rc-grey">${esc(SHIP.note)}</p>` : ""}
-          <div class="btn-row">
-            <button type="button" class="btn" data-print>Print / save</button>
-            <button type="button" class="btn main" data-track>Track it</button>
-          </div>
-        </div>
-      </div>`;
-    const im = rc.querySelector(".rc-img img");
-    im.addEventListener("error", () => { rc.querySelector(".qv").classList.add("no-img"); im.parentNode.remove(); });
-    if (!rc.open) rc.showModal();
-  }
-  rc.addEventListener("click", (e) => {
-    if (e.target === rc || e.target.closest("[data-close]")) return rc.close();
-    if (e.target.closest("[data-print]")) window.print();
-    const code = rc.querySelector(".rc-code b")?.textContent;
-    if (e.target.closest("[data-track]")) { rc.close(); openTrack(code); }
-    const cp = e.target.closest("[data-copy]");
-    if (cp) navigator.clipboard?.writeText(code).then(() => { cp.textContent = "Copied"; setTimeout(() => { cp.textContent = "Copy"; }, 1500); }, () => {});
-  });
-
-  // ── Section 3: track a parcel by the code on the receipt ──
-  const STEPS = SHIP.steps || [];
-  const DEMO_MIN = [0, 1, 2, 3, 5];   // demo tracking: minutes after ordering that each step is reached
-  const savedOrders = () => { try { return JSON.parse(localStorage.getItem("monochrome-orders")) || []; } catch { return []; } };
-  // Kept in this browser only. The street address, phone and email are NOT saved.
-  function rememberOrder(o) {
-    try {
-      const { name, postcode, city, state } = o.ship;
-      const list = savedOrders().filter((x) => x.code !== o.code);
-      list.push({ code: o.code, at: o.at, total: o.total, items: o.items, ship: { name, postcode, city, state } });
-      localStorage.setItem("monochrome-orders", JSON.stringify(list.slice(-20)));
-    } catch { /* private mode: demo tracking just won't find it */ }
-    renderMe();
-  }
-  // → { status, updated, courier, parcel, demo } or null if the code isn't known
-  async function lookup(code) {
-    if (SHIP.trackUrl) {
-      const r = await fetch(`${SHIP.trackUrl}${SHIP.trackUrl.includes("?") ? "&" : "?"}code=${encodeURIComponent(code)}`, { headers: { Accept: "application/json" } });
-      if (!r.ok) throw new Error(r.status);
-      const d = await r.json();
-      return d.found === false || !d.status ? null : d;
-    }
-    const o = savedOrders().find((x) => x.code === code);
-    if (!o) return null;
-    const mins = (Date.now() - o.at) / 60000;
-    let i = 0;
-    DEMO_MIN.forEach((m, k) => { if (mins >= m) i = k; });
-    i = Math.min(i, STEPS.length - 1);
-    return { status: STEPS[i].id, updated: new Date(o.at + DEMO_MIN[i] * 60000).toISOString(), demo: true };
-  }
-  function normCode(v) {
-    const c = v.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    return c.length === 8 ? `${c.slice(0, 4)}-${c.slice(4)}` : c;
-  }
-  // Ren the courier comments on whatever the tracker shows.
-  const REN_TRACK = {
-    idle:      "…got a code? give it here. I'll find your parcel.",
-    looking:   "…checking.",
-    unknown:   "…hm. that code doesn't ring a bell. check the receipt?",
-    error:     "…the line's down. try again in a bit.",
-    placed:    "…got your order. waiting on the payment.",
-    paid:      "…paid. it's getting folded.",
-    packed:    "…packed. I'll pick it up soon.",
-    posted:    "…it's with me. on my way.",
-    delivered: "…delivered. you're welcome.",
-  };
-  const trackBubble = $("#trackBubble");
-  function trackSay(key) {
-    trackBubble.textContent = Object.hasOwn(REN_TRACK, key) ? REN_TRACK[key] : REN_TRACK.looking;
-    trackBubble.classList.remove("pop");
-    void trackBubble.offsetWidth;
-    trackBubble.classList.add("pop");
-  }
-
-  // Codes of orders placed in this browser, as one-tap buttons.
-  function showRecent() {
-    const list = savedOrders().slice(-3).reverse();
-    $("#trackRecent").innerHTML = list.length
-      ? `<span>Your orders:</span>${list.map((o) => `<button type="button" data-code="${esc(o.code)}">${esc(o.code)}</button>`).join("")}`
-      : "";
-  }
-  $("#trackRecent").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-code]");
-    if (b) track(b.dataset.code);
-  });
-
-  async function track(raw) {
-    const out = $("#trackResult"), code = normCode(raw);
-    $("#trackCode").value = code;
-    out.innerHTML = `<p class="track-msg">Looking…</p>`;
-    trackSay("looking");
-    let found;
-    try { found = await lookup(code); }
-    catch { out.innerHTML = `<p class="track-msg">Couldn’t reach tracking. Try again in a moment.</p>`; trackSay("error"); return; }
-    if (!found) {
-      out.innerHTML = `<p class="track-msg">We can’t find <b>${esc(code)}</b>. Check it matches your receipt exactly (4 digits, a dash, 4 characters).</p>`;
-      trackSay("unknown");
-      return;
-    }
-    trackSay(found.status);
-    const cur = Math.max(0, STEPS.findIndex((s) => s.id === found.status));
-    const upd = found.updated ? new Date(found.updated) : null;
-    out.innerHTML = `
-      <div class="track-card">
-        <p class="card-kicker">Tracking code</p>
-        <p class="track-code">${esc(code)}</p>
-        <ol class="timeline">${STEPS.map((s, i) => `
-          <li class="${i < cur ? "done" : i === cur ? "now" : ""}" ${i === cur ? 'aria-current="step"' : ""}>
-            <span class="pin" aria-hidden="true">${i < cur ? "✓" : i + 1}</span>
-            <div><b>${esc(s.name)}</b><small>${esc(s.note || "")}</small></div>
-          </li>`).join("")}
-        </ol>
-        ${found.courier || found.parcel ? `<p class="track-meta"><b>${esc(found.courier || "Courier")}</b>${found.parcel ? ` · parcel no. ${esc(found.parcel)}` : ""}</p>` : ""}
-        ${upd && !isNaN(upd) ? `<p class="track-meta">Updated ${esc(upd.toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }))}</p>` : ""}
-        ${found.demo ? `<p class="track-meta">Demo tracking: moves forward every minute. Real updates need <code>trackUrl</code> in config.js.</p>` : ""}
-      </div>`;
-  }
-  // ── Section 4: My orders. Locked until this browser has placed an order. ──
-  const LOCK = `<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path class="sh-closed" d="M8 11V8a4 4 0 0 1 8 0v3" fill="none"/><path class="sh-open" d="M8 11V8a4 4 0 0 1 7.6-1.7" fill="none"/></svg>`;
-  function renderMe() {
-    const list = savedOrders().slice().reverse();
-    const box = $("#meBody"), nav = $("#navMe");
-    nav.dataset.locked = list.length ? "false" : "true";
-    nav.querySelector(".lock-slot").innerHTML = LOCK;
-    nav.setAttribute("aria-label", list.length ? `Orders (${list.length})` : "Orders, locked");
-    if (!list.length) {
-      box.innerHTML = `
-        <div class="me-lock">
-          <div class="me-ghost" aria-hidden="true"><i></i><i></i></div>
-          <div class="me-lock-card">
-            ${LOCK}
-            <h3>Locked</h3>
-            <p>Place your first order to unlock this page. Your orders and receipts will show up here.</p>
-            <a class="btn main" href="#order">Go shopping</a>
-          </div>
-        </div>`;
-      return;
-    }
-    box.innerHTML = `<ul class="me-list">${list.map((o) => `
-      <li class="me-order" data-code="${esc(o.code)}">
-        <div class="me-top"><b class="me-code">${esc(o.code)}</b><span class="me-status" data-status>…</span></div>
-        <p class="me-meta">${esc(new Date(o.at).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }))}${o.total != null ? ` · ${money(o.total)}` : ""}${o.ship?.city ? ` · to ${esc(o.ship.city)}` : ""}</p>
-        ${o.items ? `<p class="me-items">${o.items.map((i) => `${i.qty}× ${esc(i.name)}`).join(", ")}</p>` : ""}
-        <div class="btn-row">
-          ${o.items ? `<button type="button" class="btn" data-receipt>Receipt</button>` : ""}
-          <button type="button" class="btn main" data-track>Track</button>
-        </div>
-      </li>`).join("")}</ul>`;
-    box.querySelectorAll(".me-order").forEach((li) => {   // current status of each, like the tracker shows it
-      lookup(li.dataset.code).then((f) => {
-        const s = f && STEPS.find((x) => x.id === f.status);
-        li.querySelector("[data-status]").textContent = s ? s.name : "Status unknown";
-        if (s) li.dataset.step = STEPS.indexOf(s);
-      }).catch(() => { li.querySelector("[data-status]").textContent = "Status unavailable"; });
-    });
-  }
-  $("#meBody").addEventListener("click", (e) => {
-    const li = e.target.closest(".me-order");
-    if (!li) return;
-    if (e.target.closest("[data-track]")) openTrack(li.dataset.code);
-    if (e.target.closest("[data-receipt]")) showReceipt(savedOrders().find((o) => o.code === li.dataset.code));
-  });
-  renderMe();
-  // Demo tracking moves on by itself, so refresh the statuses now and then.
-  setInterval(() => { if (savedOrders().length && !document.hidden) renderMe(); }, 60000);
-
-  showRecent();
-  $("#trackForm").addEventListener("submit", (e) => { e.preventDefault(); track($("#trackCode").value); });
-  function openTrack(code) {
-    showRecent();
-    $("#track").scrollIntoView({ behavior: calm ? "auto" : "smooth" });
-    $("#trackCode").value = code;
-    track(code);
-  }
 
   // Order number = tracking code, e.g. 1311-K7QP (day + month, then 4 random characters without
   // look-alikes like 0/O or 1/I).
@@ -844,7 +603,7 @@
         if (!inFinder(x, y) && rnd() > 0.5) cells += `<rect x="${x * c}" y="${y * c}" width="${c}" height="${c}"/>`;
     return `<svg viewBox="0 0 ${n * c} ${n * c}" aria-label="Demo QR code">${cells}
       ${finder(0, 0)}${finder(n - 7, 0)}${finder(0, n - 7)}</svg>
-      <p class="qr-demo">Demo QR · set <code>paymentQr</code> in config.js</p>`;
+      <p class="qr-demo">Online transfer coming soon</p>`;
   }
 
   // ── Mio peeking over the bag card (only once assets/mio/peek.jpg exists) ──
@@ -867,11 +626,19 @@
     peekTimer = setTimeout(() => peekBubble.classList.remove("show"), 2200);
   }
 
-  $("#brand").textContent = cfg.shopName;
-  document.title = cfg.shopName;
   restoreBag();
   renderGrid();
   render();
+
+  // Sent here by Mio or Ren's pick: catalogue.html?pick={"garment":"hoodie",...}
+  const picked = new URLSearchParams(location.search).get("pick");
+  if (picked) {
+    history.replaceState(null, "", location.pathname + location.hash);
+    try {
+      const piece = JSON.parse(picked);
+      if (piece && typeof piece === "object") setTimeout(() => prefill(piece), 300);
+    } catch { /* ignore a bad link */ }
+  }
 
   window.Shop = { cfg, describe, money, prefill, setParts };
 })();

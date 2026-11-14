@@ -109,6 +109,18 @@ window.SHOP_CONFIG = {
     { id: "ren", name: "Ren", sex: "male" },
   ],
 
+  // Reviews on the home page. These are SAMPLE reviews so the section has something in it:
+  // replace them with real customers' words (and remove the ones you can't back up) before launch.
+  // rating: 1-5. piece: what they bought.
+  reviews: [
+    { name: "Aina",   piece: "Oversized Tee",     rating: 5, text: "Heavier than I expected and the black stays black after washing. Exactly the fit in the picture." },
+    { name: "Daniel", piece: "Fleece Hoodie",     rating: 5, text: "Soft inside, no logo shouting. I own it in two colours now." },
+    { name: "Sofea",  piece: "Slim Tee",          rating: 4, text: "Good cut and quick delivery. Sized up once because I like it loose, and the size guide helped." },
+    { name: "Hakim",  piece: "Oxford Shirt",      rating: 5, text: "Crisp white that actually looks expensive. Comes folded in a bag, no fuss." },
+    { name: "Mei Ling", piece: "Cardigan",        rating: 5, text: "Nobody asked if I needed help. 10/10 shopping experience." },
+    { name: "Irfan",  piece: "Half Zipper",       rating: 4, text: "Nice weight for aircon offices. The tracking page made it easy to know when to expect it." },
+  ],
+
   // Character art: <art.mio or art.ren><pose><ext>, blink frames as <pose>-blink<ext>.
   // Lines and the conversation live in hero.js. art.wear = the catalogue art above.
   art: { ext: ".jpg", mio: "assets/mio/", ren: "assets/ren/", wear: "assets/wear/" },

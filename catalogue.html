@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Black, white and grey clothing. Pick, pay by QR, we post it.">
+  <title>Catalogue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page-catalogue" data-per-page="12">
+  <nav class="nav">
+    <a class="brand" id="brand" href="index.html">Monochrome</a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html#order">Shop</a>
+      <a class="nav-link" href="assistant.html">Assistant</a>
+      <a class="nav-link" href="track.html">Track</a>
+      <a class="nav-link nav-me" id="navMe" href="orders.html" data-locked="true">Orders</a>
+      <a class="nav-order" id="navBag" href="index.html#bag" aria-label="Bag, empty">
+        <svg class="bag-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4Z"/><path d="M8.5 8V6.5a3.5 3.5 0 0 1 7 0V8" fill="none"/></svg>
+        <span class="bag-count" id="bagCount" aria-hidden="true" hidden>0</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── the catalogue ── -->
+  <section class="order" id="order" aria-labelledby="orderTitle">
+    <header class="order-head">
+      <h1 id="orderTitle">Catalogue</h1>
+    </header>
+
+    <div class="shop-bar">
+      <div class="tabs" id="tabs" role="group" aria-label="Category"></div>
+      <div class="bar-right">
+        <div class="worn" role="group" aria-label="Worn by"><span>Worn by</span><span id="worn"></span></div>
+        <label class="sort">Sort
+          <select id="sort">
+            <option value="featured">Featured</option>
+            <option value="low">Price: low to high</option>
+            <option value="high">Price: high to low</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="order-grid">
+      <div>
+        <p class="count" id="count"></p>
+        <div class="products" id="products"></div>
+        <nav class="pager" id="pager" aria-label="Pages"></nav>
+      </div>
+
+      <aside class="summary-wrap" id="bag">
+        <!-- Mio peeking over the bag card (shows once assets/mio/peek.jpg exists) -->
+        <div class="peek" id="peek" aria-hidden="true">
+          <div class="peek-clip"><img class="peek-img" id="peekImg" alt="" decoding="async"></div>
+          <p class="peek-bubble" id="peekBubble"></p>
+        </div>
+        <div class="summary" id="summary" aria-live="polite"></div>
+      </aside>
+    </div>
+  </section>
+
+
+  <!-- Quick view: filled in by catalogue.js -->
+  <dialog class="quick" id="quick" aria-labelledby="qvTitle"></dialog>
+
+  <!-- Receipt: opens when an order is complete -->
+  <dialog class="quick receipt" id="receipt" aria-labelledby="rcTitle"></dialog>
+
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="index.html">Monochrome</a>
+        <p>Black, white and grey clothing, picked without small talk.</p>
+      </div>
+      <nav class="footer-col" aria-label="Shop">
+        <h2>Shop</h2>
+        <a href="catalogue.html">Catalogue</a>
+        <a href="assistant.html">Ask Mio &amp; Ren</a>
+        <a href="catalogue.html#bag">Your bag</a>
+        <a href="index.html#reviews">Reviews</a>
+      </nav>
+      <nav class="footer-col" aria-label="Orders">
+        <h2>Orders</h2>
+        <a href="track.html">Track a parcel</a>
+        <a href="orders.html">My orders</a>
+      </nav>
+      <div class="footer-col">
+        <h2>Good to know</h2>
+        <p>Pay by QR, we post it in a bag.</p>
+        <p>Doesn’t fit? Send it back with your code. No questions asked.</p>
+      </div>
+    </div>
+    <p class="footer-base">© <span id="year"></span> Monochrome. All rights reserved.</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="shared.js"></script>
+  <script src="catalogue.js"></script>
+</body>
+</html>

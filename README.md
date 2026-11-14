@@ -2,7 +2,8 @@
 
 A small black-and-white clothing shop. Pick your clothes, pay by QR, show your number.
 
-- **Section 1, Mio:** the shy shopkeeper greets you in a speech bubble, and you reply with buttons: *What's good?* (two quick questions, then she picks a piece; "I'll take that" fills it in below), *What is this place?*, *Help me find my size* (pick your chest measurement and she sets your size), *I'll just browse*. You can poke her.
+- **Pages:** `index.html` is the poster, then the shop and reviews. `catalogue.html` is the same shop on its own page. `assistant.html` is Mio and Ren's chat (`hero.js`; `assistant.js` gives it prices and sends her picks to `catalogue.html?pick=...`). `track.html` is the tracker and `orders.html` is your orders. The pages share the bag and orders through localStorage.
+- **Assistant page, Mio and Ren:** the shy shopkeeper greets you in a speech bubble, and you reply with buttons: *What's good?* (two quick questions, then she picks a piece; "I'll take that" opens it in the catalogue), *What is this place?*, *Help me find my size* (pick your chest measurement and she sets your size), *I'll just browse*. You can poke her.
 - **Section 2, Shop:** an online-store style catalogue: product cards 6 per page with page buttons, category tabs (Tees / Shirts / Hoodies / Pants), sort by price, colour dots on each card, and a **Worn by** switch (Mio / Ren) that swaps who's wearing the clothes. Tap a card for the quick view (colour, size, quantity, *Add to bag*). Then pay by QR and get a pickup card to show at the counter. Mio peeks over the bag card once `assets/mio/peek.jpg` exists.
 
 - **Section 3, Track:** enter the code from the receipt (e.g. `1311-K7QP`) to see the parcel's progress: Order placed → Payment confirmed → Packed → Posted → Delivered. After paying, customers fill in a posting address and get a receipt modal with the code. Without `shipping.trackUrl` in config.js it runs a demo that advances every minute for orders placed in the same browser. The receipt says the code will be emailed, but **no email is sent**.
@@ -22,8 +23,11 @@ npx serve .
 
 | File | What's in it |
 |---|---|
-| [hero.js](hero.js) | Section 1: Mio's lines and conversation (`STEPS`), poses, typing, pokes. **Edit her lines here.** |
-| [app.js](app.js) | Section 2: product cards, paging, quick view, bag / QR / pickup card, peeking Mio |
+| [hero.js](hero.js) | Assistant page: Mio's lines and conversation (`STEPS`), poses, typing, pokes. **Edit her lines here.** |
+| [shared.js](shared.js) | Every page: nav, saved orders, tracking lookup, receipt modal |
+| [catalogue.js](catalogue.js) | home page shop: product cards, paging, quick view, bag / QR / pickup card, peeking Mio |
+| [track.js](track.js) | `track.html`: parcel tracker (also opens with `?code=1311-K7QP`) |
+| [orders.js](orders.js) | `orders.html`: orders placed in this browser, with receipts |
 | [config.js](config.js) | Shop name, currency, items, **products**, models, colours, sizes, fits, prints, payment QR |
 | [styles.css](styles.css) | Black-and-white manga look |
 | `assets/mio/`, `assets/ren/` | Character poses |

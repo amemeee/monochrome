@@ -1,4 +1,4 @@
-// Section 1: the shopkeepers. Visitors choose who to talk to: Mio (shy, leads by default) or Ren
+// The assistant page: the shopkeepers. Visitors choose who to talk to: Mio (shy, leads by default) or Ren
 // (deadpan). Whoever you pick talks in the big bubble with reply buttons; the other chimes in.
 // Poses, blinking, a typing speech bubble, reply buttons, pokes.
 // ── Their lines are near the top. Edit freely. *stars* make a word bold. ──
@@ -60,7 +60,7 @@
     // What is this place
     place:   { t: "it's a small clothes shop… everything in black, white and grey.", pose: "idle", next: "place2" },
     place2:  { t: "no colours to match. everything goes with everything.", pose: "ask", next: "place3", side: { t: "…I wore colour once. once." } },
-    place3:  { t: "tap anything below to see it on us. pay by QR, tell us where to post it. we'll fold it in a bag.", pose: "ask", next: "place4" },
+    place3:  { t: "tap anything in the shop to see it on us. pay by QR, tell us where to post it. we'll fold it in a bag.", pose: "ask", next: "place4" },
     place4:  { t: "doesn't fit? send it back with your code. I won't ask why. promise.", pose: "happy", next: "again", side: { t: "she means it. she's too shy to ask." } },
 
     // Her pick: two quick questions
@@ -91,7 +91,7 @@
     noTape:  { t: "…no tape? lay your favourite tee flat, measure armpit to armpit, and double it.", pose: "ask", next: "size2", side: { t: "or just guess. I always do." } },
     size3:   { t: "if you like it loose… pick *Oversized*. don't size up. it hangs nicer.", pose: "ask", next: "again", side: { t: "listen to her. she knows sizes." } },
 
-    order:   { t: "okay… I'll leave you alone. the rack is right below.", pose: "happy", go: "#order", side: { t: "…we'll be here. quietly." } },
+    order:   { t: "okay… I'll leave you alone. I'll take you to the rack.", pose: "happy", go: "catalogue.html", side: { t: "…we'll be here. quietly." } },
 
     // Back at the top after visiting the shop section
     back:    { t: "…oh. you're back.", pose: "greet", next: "again", side: { t: "told you they'd come back." } },
@@ -118,7 +118,7 @@
 
     place:   { t: "…small shop. black, white, grey. that's it." },
     place2:  { t: "…nothing clashes. I like that.", pose: "idle", side: { t: "…he wore colour once. a yellow tie.", pose: "happy" } },
-    place3:  { t: "…tap anything below to see it on us. pay by QR, tell us where to post it." },
+    place3:  { t: "…tap anything in the shop to see it on us. pay by QR, tell us where to post it." },
     place4:  { t: "…doesn't fit? send it back with your code. no questions.", pose: "show", side: { t: "…he means it. he's just bad at saying it.", pose: "happy" } },
 
     good:    { t: "…going out, or staying home?", pose: "idle" },
@@ -136,7 +136,7 @@
     noTape:  { t: "…no tape? lay a tee flat. armpit to armpit. double it.", pose: "idle", side: { t: "…or just guess. he always does.", pose: "happy" } },
     size3:   { t: "…like it loose? pick *Oversized*. don't size up.", pose: "idle", side: { t: "…listen to him. he knows sizes.", pose: "happy" } },
 
-    order:   { t: "…alright. the rack's right below. I'll be here. quietly.", pose: "show", side: { t: "…we'll be here. both of us.", pose: "happy" } },
+    order:   { t: "…alright. the rack's through there. I'll be here. quietly.", pose: "show", side: { t: "…we'll be here. both of us.", pose: "happy" } },
     back:    { t: "…you're back.", pose: "show", side: { t: "…told you they'd come back.", pose: "happy" } },
   };
   sizes.forEach((s) => { REN_TEXT["size" + s.id] = { t: `…you're a *${s.id}*. I'll remember it.`, pose: "show" }; });
@@ -313,10 +313,11 @@
     ]);
   }
 
-  // Scroll to the shop section; they rest until the visitor comes back up.
+  // Go to the shop (another page); for an in-page #section they rest until the visitor comes back up.
   function goTo(hash) {
     lastAsk = null;   // finished; next time they ask "anything else?"
-    document.querySelector(hash).scrollIntoView({ behavior: calm ? "auto" : "smooth" });
+    if (hash.startsWith("#")) document.querySelector(hash).scrollIntoView({ behavior: calm ? "auto" : "smooth" });
+    else { later(() => { location.href = hash; }, 700); return; }   // another page, e.g. the shop
     later(rest, 1200);
   }
 

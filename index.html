@@ -6,56 +6,42 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="Black-and-white clothing, picked without small talk.">
   <title>Monochrome</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <nav class="nav">
-    <a class="brand" id="brand" href="#hero">Monochrome</a>
+    <a class="brand" id="brand" href="index.html">Monochrome</a>
     <div class="nav-links">
-      <a class="nav-link" href="#order">Shop</a>
-      <a class="nav-link" href="#track">Track</a>
-      <a class="nav-link nav-me" id="navMe" href="#me" data-locked="true">Orders <span class="lock-slot"></span></a>
-      <a class="nav-order" id="navBag" href="#bag" aria-label="Bag, empty">
+      <a class="nav-link" href="catalogue.html">Shop</a>
+      <a class="nav-link" href="assistant.html">Assistant</a>
+      <a class="nav-link" href="track.html">Track</a>
+      <a class="nav-link nav-me" id="navMe" href="orders.html" data-locked="true">Orders</a>
+      <a class="nav-order" id="navBag" href="catalogue.html#bag" aria-label="Bag, empty">
         <svg class="bag-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4Z"/><path d="M8.5 8V6.5a3.5 3.5 0 0 1 7 0V8" fill="none"/></svg>
         <span class="bag-count" id="bagCount" aria-hidden="true" hidden>0</span>
       </a>
     </div>
   </nav>
 
-  <!-- ── Section 1: Mio runs the shop ── -->
-  <section class="hero" id="hero" aria-label="Mio and Ren, the shopkeepers">
-    <!-- Ren: desktop only, stands beside Mio and chimes in -->
-    <div class="ren-figure" id="renFigure">
-      <button class="ren" id="ren" type="button" aria-label="Poke Ren">
-        <img class="ren-img" id="renImg" alt="" decoding="async">
-        <img class="ren-blink" id="renBlink" alt="" decoding="async">
-      </button>
-      <p class="ren-bubble" id="renBubble" aria-hidden="true"></p>
-      <p class="sr-only" id="renLive" aria-live="polite"></p>
-    </div>
-
-    <div class="mio-figure" id="mioFigure">
-      <button class="mio" id="mio" type="button" aria-label="Poke Mio">
-        <img class="mio-img" id="mioImg" alt="" decoding="async">
-        <img class="mio-blink" id="mioBlink" alt="" decoding="async">
-      </button>
-
-      <div class="bubble" id="bubble">
-        <p class="bubble-text" id="bubbleText" aria-hidden="true"></p>
-        <p class="sr-only" id="bubbleLive" aria-live="polite"></p>
-        <div class="bubble-choices" id="choices" role="group" aria-label="Reply to Mio"></div>
-      </div>
-    </div>
-
-    <button class="talk-btn" id="talkBtn" type="button" hidden>Talk to Mio</button>
+  <!-- ── Section 1: poster ── -->
+  <section class="poster" id="poster" aria-label="Monochrome">
+    <picture>
+      <!-- Phones and portrait screens: a crop of just the pair, so they aren't cut off -->
+      <source media="(max-width: 900px), (max-aspect-ratio: 1/1)" srcset="assets/poster-mobile.jpg">
+      <img class="poster-img" src="assets/poster.jpg" alt="A girl and a boy in black clothes sit back to back on a black cube" fetchpriority="high" decoding="async">
+    </picture>
+    <h1 class="sr-only">Monochrome</h1>
     <a class="scroll-cue" href="#order">scroll to shop <span aria-hidden="true">↓</span></a>
   </section>
+
 
   <!-- ── Section 2: the catalogue ── -->
   <section class="order" id="order" aria-labelledby="orderTitle">
     <header class="order-head">
       <h2 id="orderTitle">Shop</h2>
-      <p>Black, white and grey. Nobody will ask “can I help you?”</p>
     </header>
 
     <div class="shop-bar">
@@ -90,56 +76,54 @@
     </div>
   </section>
 
-  <!-- ── Section 3: track your parcel ── -->
-  <section class="track-band" id="track" aria-labelledby="trackTitle">
-   <div class="order track">
-    <header class="order-head">
-      <h2 id="trackTitle">Track</h2>
-      <p>Enter the code from your receipt to see where your parcel is.</p>
-    </header>
-    <div class="track-grid">
-      <div class="track-main">
-        <form class="track-form" id="trackForm">
-          <label>Tracking code
-            <input id="trackCode" name="code" required maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. 1311-K7QP">
-          </label>
-          <button type="submit" class="btn main">Track</button>
-        </form>
-        <div class="track-recent" id="trackRecent"></div>
-        <div class="track-result" id="trackResult" aria-live="polite"></div>
-      </div>
-      <!-- Ren the courier, to the right of the card (assets/ren/courier.jpg); he comments on the status -->
-      <div class="track-ren-wrap">
-        <p class="track-bubble" id="trackBubble">…got a code? give it here. I'll find your parcel.</p>
-        <img class="track-ren" id="trackRen" src="assets/ren/courier.jpg" alt="Ren in a courier uniform, carrying a parcel" decoding="async" loading="lazy">
-      </div>
-    </div>
-   </div>
-  </section>
 
-  <!-- ── Section 4: your orders (locked until you've ordered) ── -->
-  <section class="me" id="me" aria-labelledby="meTitle">
-    <div class="order me-inner">
-      <header class="order-head">
-        <h2 id="meTitle">My orders</h2>
-        <p>Orders placed on this device, with receipts.</p>
-      </header>
-      <div class="me-grid">
-        <!-- Mio on the left (assets/mio/thanks.jpg), the orders on the right -->
-        <img class="me-mio" src="assets/mio/thanks.jpg" alt="Mio making a heart with her hands" decoding="async" loading="lazy">
-        <div id="meBody"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Quick view: filled in by app.js -->
+  <!-- Quick view: filled in by catalogue.js -->
   <dialog class="quick" id="quick" aria-labelledby="qvTitle"></dialog>
 
-  <!-- Receipt: opens when an order is complete; filled in by app.js -->
+  <!-- Receipt: opens when an order is complete -->
   <dialog class="quick receipt" id="receipt" aria-labelledby="rcTitle"></dialog>
 
+
+  <!-- ── Reviews ── -->
+  <section class="reviews" id="reviews" aria-labelledby="reviewsTitle">
+    <div class="reviews-inner">
+      <header class="reviews-head">
+        <h2 id="reviewsTitle">Reviews</h2>
+        <p class="reviews-score" id="reviewsScore"></p>
+      </header>
+      <ul class="review-list" id="reviewList"></ul>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="index.html">Monochrome</a>
+        <p>Black, white and grey clothing, picked without small talk.</p>
+      </div>
+      <nav class="footer-col" aria-label="Shop">
+        <h2>Shop</h2>
+        <a href="catalogue.html">Catalogue</a>
+        <a href="assistant.html">Ask Mio &amp; Ren</a>
+        <a href="catalogue.html#bag">Your bag</a>
+        <a href="index.html#reviews">Reviews</a>
+      </nav>
+      <nav class="footer-col" aria-label="Orders">
+        <h2>Orders</h2>
+        <a href="track.html">Track a parcel</a>
+        <a href="orders.html">My orders</a>
+      </nav>
+      <div class="footer-col">
+        <h2>Good to know</h2>
+        <p>Pay by QR, we post it in a bag.</p>
+        <p>Doesn’t fit? Send it back with your code. No questions asked.</p>
+      </div>
+    </div>
+    <p class="footer-base">© <span id="year"></span> Monochrome. All rights reserved.</p>
+  </footer>
+
   <script src="config.js"></script>
-  <script src="app.js"></script>
-  <script src="hero.js"></script>
+  <script src="shared.js"></script>
+  <script src="catalogue.js"></script>
 </body>
 </html>
