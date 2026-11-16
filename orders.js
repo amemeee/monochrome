@@ -24,7 +24,7 @@
         <p class="me-meta">${esc(new Date(o.at).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }))}${o.total != null ? ` · ${money(o.total)}` : ""}${o.ship?.city ? ` · to ${esc(o.ship.city)}` : ""}</p>
         ${o.items ? `<p class="me-items">${o.items.map((i) => `${i.qty}× ${esc(i.name)}`).join(", ")}</p>` : ""}
         <div class="btn-row">
-          ${o.items ? `<button type="button" class="btn" data-receipt>Receipt</button>` : ""}
+          <button type="button" class="btn" data-receipt>Receipt</button>
           <button type="button" class="btn main" data-track>Track</button>
         </div>
       </li>`).join("")}</ul>`;

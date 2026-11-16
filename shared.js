@@ -95,7 +95,7 @@
     document.body.append(rc);
   }
   function showReceipt(o) {
-    const ship = o.ship, orderNo = o.code;
+    const ship = o.ship, orderNo = o.code, items = o.items || [];
     const when = new Date(o.at);
     const date = when.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
     const time = when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -113,10 +113,11 @@
             <button type="button" class="btn" data-copy>Copy</button>
           </div>
           ${ship?.email ? `<p class="rc-line rc-grey">We’ll also email this code to ${esc(ship.email)}.</p>` : ""}
-          <ul class="rc-items">${o.items.map((it) => `
-            <li><span class="q">${it.qty}×</span><div class="info"><b>${esc(it.name)}</b><small>${esc(it.plain)}</small></div><span>${money(it.price * it.qty)}</span></li>`).join("")}
+          <ul class="rc-items">${items.length ? items.map((it) => `
+            <li><span class="q">${it.qty}×</span><div class="info"><b>${esc(it.name)}</b><small>${esc(it.plain)}</small></div><span>${money(it.price * it.qty)}</span></li>`).join("") : `
+            <li><div class="info"><small>The items weren’t saved for this order (it was placed before receipts kept them).</small></div></li>`}
           </ul>
-          <div class="total"><span>Total paid</span><span>${money(o.total)}</span></div>
+          ${o.total != null ? `<div class="total"><span>Total paid</span><span>${money(o.total)}</span></div>` : ""}
           <p class="rc-line"><b>Paid by</b> QR</p>
           ${ship ? `<p class="rc-line"><b>Posting to</b> ${esc(ship.name)}<br>${esc(to)}${ship.phone ? `<br>${esc(ship.phone)}` : ""}${ship.note ? `<br><i>“${esc(ship.note)}”</i>` : ""}</p>` : ""}
           ${SHIP.note ? `<p class="rc-line rc-grey">${esc(SHIP.note)}</p>` : ""}

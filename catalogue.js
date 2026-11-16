@@ -427,25 +427,31 @@
           </li>`).join("")}
         </ul>
         <div class="total"><span>Total</span><span>${money(total())}</span></div>
-        <div class="btn-row"><button type="button" class="btn main" data-act="pay">Pay by QR</button></div>`
+        <div class="btn-row"><button type="button" class="btn main" data-act="pay">Pay by QR</button></div>
+        <div class="btn-row"><button type="button" class="btn quiet" data-act="clear">Cancel</button></div>`
         : `<h3>Your bag</h3><p class="empty">Empty. Tap a piece and <b>Add to bag</b>.</p>`;
     } else if (stage === "pay") {
-      const qr = cfg.paymentQr
-        ? `<img src="${esc(cfg.paymentQr)}" alt="Payment QR for ${esc(cfg.payee)}">`
-        : demoQr();
-      box.innerHTML = `
+      // No payment QR set yet: a placeholder QR (not scannable) labelled "coming soon".
+      box.innerHTML = cfg.paymentQr ? `
         <h3>Scan to pay</h3>
         <p class="pay-amount">${money(total())}</p>
-        <div class="qr-box">${qr}</div>
+        <div class="qr-box"><img src="${esc(cfg.paymentQr)}" alt="Payment QR for ${esc(cfg.payee)}"></div>
         <p class="payee">${esc(cfg.payee)}</p>
         <div class="btn-row">
           <button type="button" class="btn quiet" data-act="back">Back</button>
           <button type="button" class="btn main" data-act="paid">I’ve paid</button>
+        </div>` : `
+        <h3>Payment</h3>
+        <p class="pay-amount">${money(total())}</p>
+        <div class="qr-box">${demoQr()}</div>
+        <div class="btn-row">
+          <button type="button" class="btn quiet" data-act="back">Back</button>
+          <button type="button" class="btn main" data-act="paid">Continue</button>
         </div>`;
     } else if (stage === "ship") {
       box.innerHTML = `
         <h3>Where should we post it?</h3>
-        <p class="ship-note">Paid ${money(total())}. Thank you. We just need your details.</p>
+        <p class="ship-note">${cfg.paymentQr ? `Paid ${money(total())}. Thank you. ` : `Total ${money(total())}. `}We just need your details.</p>
         <form class="ship-form" data-ship>
           <label>Full name<input name="name" autocomplete="name" required maxlength="80"></label>
           <label>Phone<input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="20" placeholder="012-345 6789"></label>
@@ -461,7 +467,10 @@
           </select></label>
           <label>Note <small>(optional)</small><textarea name="note" rows="2" maxlength="200" placeholder="Leave at the guardhouse, etc."></textarea></label>
           <p class="ship-error" role="alert" hidden></p>
-          <div class="btn-row"><button type="submit" class="btn main">Confirm order</button></div>
+          <div class="btn-row">
+            <button type="button" class="btn quiet" data-act="back">Cancel</button>
+            <button type="submit" class="btn main">Confirm order</button>
+          </div>
         </form>`;
     } else {
       const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -522,6 +531,11 @@
     if (!act) return;
     if (act === "pay") { stage = "pay"; peekSay("…I won't look. promise."); }
     if (act === "back") stage = "order";
+    if (act === "clear") {   // cancel the order: empty the bag
+      if (!confirm("Cancel this order and empty your bag?")) return;
+      bag = [];
+      stage = "order";
+    }
     if (act === "paid") {
       stage = "ship";   // next: where to post it
       orderNo = makeCode();
@@ -603,7 +617,7 @@
         if (!inFinder(x, y) && rnd() > 0.5) cells += `<rect x="${x * c}" y="${y * c}" width="${c}" height="${c}"/>`;
     return `<svg viewBox="0 0 ${n * c} ${n * c}" aria-label="Demo QR code">${cells}
       ${finder(0, 0)}${finder(n - 7, 0)}${finder(0, n - 7)}</svg>
-      <p class="qr-demo">Online transfer coming soon</p>`;
+      <p class="qr-demo">Payment gateway coming soon</p>`;
   }
 
   // ── Mio peeking over the bag card (only once assets/mio/peek.jpg exists) ──
